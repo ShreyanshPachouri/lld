@@ -137,7 +137,7 @@ abstract class Order{
         this.paymentStrategy = paymentStrategy;
     }
 
-    abstract void getType();
+    abstract String getType();
 }
 
 class DeliveryOrder extends Order{
@@ -148,26 +148,26 @@ class DeliveryOrder extends Order{
         this.address = address;
     }
 
-    void getType(){
-        System.out.println("This is a delivery order.");
+    String getType(){
+        return "Delivery";
     }
 }
 
 class PickupOrder extends Order{
-    String address;
+    String ResAddress;
 
     PickupOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, String address){
         super(id, user, restaurant, items, paymentStrategy);
-        this.address = address;
+        this.ResAddress = address;
     }
 
-    void getType(){
-        System.out.println("This is a pickup order.");
+    String getType(){
+        return "Pickup";
     }
 }
 
 interface IOrderFactory{
-    void createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy);
+    Order createOrder(Order order);
 }
 
 class ScheduleOrderFactory implements IOrderFactory{
@@ -177,16 +177,30 @@ class ScheduleOrderFactory implements IOrderFactory{
         this.scheduleTime = scheduleTime;
     }
 
-    public void createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy){
-        Order order = new DeliveryOrder(id, user, restaurant, items, paymentStrategy, user.address);
-        System.out.println("Scheduled order created for " + scheduleTime);
+    public Order createOrder(Order order){
+        if(order.getType().equals("Delivery")){
+            return new DeliveryOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.user.address);        
+        }
+
+        else if(order.getType().equals("Pickup")){
+            return new PickupOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.restaurant.location);
+        }
+
+        return null;
     }
 }
 
 class NowOrderFactory implements IOrderFactory{
-    public void createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy){
-        Order order = new DeliveryOrder(id, user, restaurant, items, paymentStrategy, restaurant.location);
-        System.out.println("Now order created.");
+    public Order createOrder(Order order){
+        if(order.getType().equals("Delivery")){
+            return new DeliveryOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.user.address);        
+        }
+
+        else if(order.getType().equals("Pickup")){
+            return new PickupOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.restaurant.location);
+        }
+
+        return null;
     }
 }
 
