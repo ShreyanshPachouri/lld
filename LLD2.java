@@ -128,13 +128,15 @@ abstract class Order{
     Restaurant restaurant;
     ArrayList<LLD2> items;
     IPaymentStrategy paymentStrategy;
+    Boolean isScheduled;
 
-    Order(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy){
+    Order(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled){
         this.id = id;
         this.user = user;
         this.restaurant = restaurant;
         this.items = items;
         this.paymentStrategy = paymentStrategy;
+        this.isScheduled = isScheduled;
     }
 
     abstract String getType();
@@ -143,8 +145,8 @@ abstract class Order{
 class DeliveryOrder extends Order{
     String address;
 
-    DeliveryOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, String address){
-        super(id, user, restaurant, items, paymentStrategy);
+    DeliveryOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, String address, Boolean isScheduled){
+        super(id, user, restaurant, items, paymentStrategy, isScheduled);
         this.address = address;
     }
 
@@ -156,8 +158,8 @@ class DeliveryOrder extends Order{
 class PickupOrder extends Order{
     String ResAddress;
 
-    PickupOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, String address){
-        super(id, user, restaurant, items, paymentStrategy);
+    PickupOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, String address, Boolean isScheduled){
+        super(id, user, restaurant, items, paymentStrategy, isScheduled);
         this.ResAddress = address;
     }
 
@@ -167,7 +169,7 @@ class PickupOrder extends Order{
 }
 
 interface IOrderFactory{
-    Order createOrder(Order order);
+    Order createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled, String orderType);
 }
 
 class ScheduleOrderFactory implements IOrderFactory{
@@ -177,13 +179,13 @@ class ScheduleOrderFactory implements IOrderFactory{
         this.scheduleTime = scheduleTime;
     }
 
-    public Order createOrder(Order order){
-        if(order.getType().equals("Delivery")){
-            return new DeliveryOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.user.address);        
+    public Order createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled, String orderType){
+        if(orderType.equals("Delivery")){
+            return new DeliveryOrder(id, user, restaurant, items, paymentStrategy, user.address, isScheduled);        
         }
 
-        else if(order.getType().equals("Pickup")){
-            return new PickupOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.restaurant.location);
+        else if(orderType.equals("Pickup")){
+            return new PickupOrder(id, user, restaurant, items, paymentStrategy, restaurant.location, isScheduled);
         }
 
         return null;
@@ -191,13 +193,13 @@ class ScheduleOrderFactory implements IOrderFactory{
 }
 
 class NowOrderFactory implements IOrderFactory{
-    public Order createOrder(Order order){
-        if(order.getType().equals("Delivery")){
-            return new DeliveryOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.user.address);        
+    public Order createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled, String orderType){
+        if(orderType.equals("Delivery")){
+            return new DeliveryOrder(id, user, restaurant, items, paymentStrategy, user.address, isScheduled);        
         }
 
-        else if(order.getType().equals("Pickup")){
-            return new PickupOrder(order.id, order.user, order.restaurant, order.items, order.paymentStrategy, order.restaurant.location);
+        else if(orderType.equals("Pickup")){
+            return new PickupOrder(id, user, restaurant, items, paymentStrategy, restaurant.location, isScheduled);
         }
 
         return null;
