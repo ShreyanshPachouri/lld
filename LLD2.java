@@ -180,6 +180,10 @@ class ScheduleOrderFactory implements IOrderFactory{
     }
 
     public Order createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled, String orderType){
+        if(!isScheduled){
+            return null;
+        }
+
         if(orderType.equals("Delivery")){
             return new DeliveryOrder(id, user, restaurant, items, paymentStrategy, user.address, isScheduled);        
         }
@@ -194,6 +198,10 @@ class ScheduleOrderFactory implements IOrderFactory{
 
 class NowOrderFactory implements IOrderFactory{
     public Order createOrder(int id, User user, Restaurant restaurant, ArrayList<LLD2> items, IPaymentStrategy paymentStrategy, Boolean isScheduled, String orderType){
+        if(isScheduled){
+            return null;
+        }
+        
         if(orderType.equals("Delivery")){
             return new DeliveryOrder(id, user, restaurant, items, paymentStrategy, user.address, isScheduled);        
         }
