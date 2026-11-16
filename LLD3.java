@@ -55,6 +55,11 @@ abstract class IObserver{
 class Logger extends IObserver{
     NotificationObservable observable;
 
+    public Logger(NotificationObservable observable){
+        this.observable = observable;
+
+    }
+
     void update(){
         System.out.println("Logged event: " + observable.getNotification().getContent());
     }
@@ -63,6 +68,11 @@ class Logger extends IObserver{
 class NotificationEngine extends IObserver{
     NotificationObservable observable;
     ArrayList<INotificationStrategy> strategies;
+
+    public NotificationEngine(NotificationObservable observable, ArrayList<INotificationStrategy> strategies){
+        this.observable = observable;
+        this.strategies = strategies;
+    }
 
     void update(){
         for(INotificationStrategy strategy : strategies){
@@ -134,14 +144,16 @@ class PopupStrategy extends INotificationStrategy{
 class NotificationService{
     ArrayList<INotification> notifications;
     static NotificationService instance;
+    NotificationObservable observable = new NotificationObservable();
+    ArrayList<INotificationStrategy> strategies = new ArrayList<>(Arrays.asList(new EmailStrategy(), new SMSStrategy(), new PopupStrategy()));
 
-    private NotificationService(){
-        notifications = new ArrayList<>();
+    private NotificationService(ArrayList<INotification> notifications){
+        this.notifications = notifications;
     }
 
-    private static NotificationService getInstance(){
+    public static NotificationService getInstance(ArrayList<INotification> notifications){
         if(instance == null){
-            instance = new NotificationService();
+            instance = new NotificationService(notifications);
         }
 
         return instance;
@@ -149,10 +161,9 @@ class NotificationService{
 
     void sendNotifications(){
         for(INotification notification: notifications){
-            NotificationObservable observable = new NotificationObservable();
-
             observable.setNotification(notification);
-            observable.addObserver(new Logger());
+            observable.addObserver(new Logger(observable));
+            observable.addObserver(new NotificationEngine(observable, strategies));
             observable.notifyObservers();
         }
     }
