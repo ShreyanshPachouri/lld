@@ -154,6 +154,7 @@ class NotificationService{
 
     private NotificationService(ArrayList<INotification> notifications){
         this.notifications = notifications;
+        setupObservers();
     }
 
     public static NotificationService getInstance(ArrayList<INotification> notifications){
@@ -165,8 +166,6 @@ class NotificationService{
     }
 
     void sendNotifications(){
-        setupObservers();
-        
         for(INotification notification: notifications){
             observable.setNotification(notification);
             observable.notifyObservers();
