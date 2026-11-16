@@ -144,8 +144,13 @@ class PopupStrategy extends INotificationStrategy{
 class NotificationService{
     ArrayList<INotification> notifications;
     static NotificationService instance;
-    NotificationObservable observable = new NotificationObservable();
     ArrayList<INotificationStrategy> strategies = new ArrayList<>(Arrays.asList(new EmailStrategy(), new SMSStrategy(), new PopupStrategy()));
+    NotificationObservable observable = new NotificationObservable();
+
+    private void setupObservers(){
+        observable.addObserver(new Logger(observable));
+        observable.addObserver(new NotificationEngine(observable, strategies));
+    }
 
     private NotificationService(ArrayList<INotification> notifications){
         this.notifications = notifications;
@@ -160,10 +165,10 @@ class NotificationService{
     }
 
     void sendNotifications(){
+        setupObservers();
+        
         for(INotification notification: notifications){
             observable.setNotification(notification);
-            observable.addObserver(new Logger(observable));
-            observable.addObserver(new NotificationEngine(observable, strategies));
             observable.notifyObservers();
         }
     }
