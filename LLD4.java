@@ -80,11 +80,11 @@ class WiredSpeakerAPI{
     }
 }
 
-interface IAudioOutputDevice{
-    public void playAudio(Song s);
+abstract class IAudioOutputDevice{
+    public abstract void playAudio(Song s);
 }
 
-class HeadphonesAdapter implements IAudioOutputDevice{
+class HeadphonesAdapter extends IAudioOutputDevice{
     HeadphonesAPI headphones = new HeadphonesAPI();
 
     public void playAudio(Song s){
@@ -92,7 +92,7 @@ class HeadphonesAdapter implements IAudioOutputDevice{
     }
 }
 
-class BlutoothSpeakerAdapter implements IAudioOutputDevice{
+class BlutoothSpeakerAdapter extends IAudioOutputDevice{
     BluetoothSpeakerAPI bluetooth = new BluetoothSpeakerAPI();
 
     public void playAudio(Song s){
@@ -100,7 +100,7 @@ class BlutoothSpeakerAdapter implements IAudioOutputDevice{
     }
 }
 
-class WiredSpeakerAdapter implements IAudioOutputDevice{
+class WiredSpeakerAdapter extends IAudioOutputDevice{
     WiredSpeakerAPI wiredSpeaker = new WiredSpeakerAPI();
 
     public void playAudio(Song s){
@@ -118,9 +118,11 @@ class DeviceFactory{
             return new HeadphonesAdapter();
         }
 
-        else{
+        else if (device == DeviceType.WIRED){
             return new WiredSpeakerAdapter();
         }
+
+        throw new RuntimeException("Invalid device type");
     }
 }
 
@@ -316,5 +318,80 @@ class PlaylistManager{
         }
 
         return map.get(name);
+    }
+}
+
+class DeviceManager{
+    private static DeviceManager instance;
+    private IAudioOutputDevice currentOutputDevice;
+
+    private DeviceManager(){}
+
+    public static DeviceManager getInstance(){
+        if(instance == null){
+            instance = new DeviceManager();
+        }
+
+        return instance;
+    }
+
+    public void connect(DeviceType deviceType){
+        if(deviceType == DeviceType.BLUETOOTH){
+            currentOutputDevice = new BlutoothSpeakerAdapter();
+            System.out.println(DeviceType.BLUETOOTH + " is connected");
+        }
+
+        else if(deviceType == DeviceType.HEADPHONES){
+            currentOutputDevice = new HeadphonesAdapter();
+            System.out.println(DeviceType.HEADPHONES + " is connected");
+        }
+
+        else if(deviceType == DeviceType.WIRED){
+            currentOutputDevice = new WiredSpeakerAdapter();
+            System.out.println(DeviceType.WIRED + " is connected");
+        }
+
+        throw new RuntimeException("Invalid device type");
+    }
+
+    public IAudioOutputDevice getOutputDevice(){
+        return this.currentOutputDevice;
+    }
+
+    public boolean hasOutputDevice(){
+        return currentOutputDevice != null;
+    }
+}
+
+class StrategyManager{
+    private static StrategyManager instance;
+    SequentialPlayStrategy sequntialStrategy;
+    RandomPlayStrategy randomStrategy;
+    CustomQueueStrategy customStrategy;
+
+    private StrategyManager(){};
+
+    public static StrategyManager getInstance(){
+        if(instance == null){
+            instance = new StrategyManager();
+        }
+
+        return instance;
+    }
+
+    public PlayStrategy getStrategy(PlayStrategyType type){
+        if(type == PlayStrategyType.SEQUENTIAL){
+            return this.sequntialStrategy;
+        }
+
+        else if(type == PlayStrategyType.RANDOM){
+            return this.randomStrategy;
+        }
+
+        else if(type == PlayStrategyType.CUSTOM_QUEUE){
+            return this.customStrategy;
+        }
+
+        throw new RuntimeException("Invalid strategy type");
     }
 }
