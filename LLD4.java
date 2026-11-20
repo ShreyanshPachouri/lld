@@ -339,16 +339,19 @@ class DeviceManager{
         if(deviceType == DeviceType.BLUETOOTH){
             currentOutputDevice = new BlutoothSpeakerAdapter();
             System.out.println(DeviceType.BLUETOOTH + " is connected");
+            return;
         }
 
         else if(deviceType == DeviceType.HEADPHONES){
             currentOutputDevice = new HeadphonesAdapter();
             System.out.println(DeviceType.HEADPHONES + " is connected");
+            return;
         }
 
         else if(deviceType == DeviceType.WIRED){
             currentOutputDevice = new WiredSpeakerAdapter();
             System.out.println(DeviceType.WIRED + " is connected");
+            return;
         }
 
         throw new RuntimeException("Invalid device type");
@@ -365,9 +368,9 @@ class DeviceManager{
 
 class StrategyManager{
     private static StrategyManager instance;
-    SequentialPlayStrategy sequntialStrategy;
-    RandomPlayStrategy randomStrategy;
-    CustomQueueStrategy customStrategy;
+    // SequentialPlayStrategy sequntialStrategy;
+    // RandomPlayStrategy randomStrategy;
+    // CustomQueueStrategy customStrategy;
 
     private StrategyManager(){};
 
@@ -381,15 +384,15 @@ class StrategyManager{
 
     public PlayStrategy getStrategy(PlayStrategyType type){
         if(type == PlayStrategyType.SEQUENTIAL){
-            return this.sequntialStrategy;
+            return new SequentialPlayStrategy();
         }
 
         else if(type == PlayStrategyType.RANDOM){
-            return this.randomStrategy;
+            return new RandomPlayStrategy();
         }
 
         else if(type == PlayStrategyType.CUSTOM_QUEUE){
-            return this.customStrategy;
+            return new CustomQueueStrategy();
         }
 
         throw new RuntimeException("Invalid strategy type");
