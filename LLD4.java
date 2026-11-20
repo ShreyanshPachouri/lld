@@ -336,25 +336,7 @@ class DeviceManager{
     }
 
     public void connect(DeviceType deviceType){
-        if(deviceType == DeviceType.BLUETOOTH){
-            currentOutputDevice = new BlutoothSpeakerAdapter();
-            System.out.println(DeviceType.BLUETOOTH + " is connected");
-            return;
-        }
-
-        else if(deviceType == DeviceType.HEADPHONES){
-            currentOutputDevice = new HeadphonesAdapter();
-            System.out.println(DeviceType.HEADPHONES + " is connected");
-            return;
-        }
-
-        else if(deviceType == DeviceType.WIRED){
-            currentOutputDevice = new WiredSpeakerAdapter();
-            System.out.println(DeviceType.WIRED + " is connected");
-            return;
-        }
-
-        throw new RuntimeException("Invalid device type");
+       currentOutputDevice = DeviceFactory.createDevice(deviceType);
     }
 
     public IAudioOutputDevice getOutputDevice(){
@@ -368,10 +350,7 @@ class DeviceManager{
 
 class StrategyManager{
     private static StrategyManager instance;
-    // SequentialPlayStrategy sequntialStrategy;
-    // RandomPlayStrategy randomStrategy;
-    // CustomQueueStrategy customStrategy;
-
+    
     private StrategyManager(){};
 
     public static StrategyManager getInstance(){
