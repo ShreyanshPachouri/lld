@@ -154,6 +154,7 @@ class SequentialPlayStrategy extends PlayStrategy{
             throw new RuntimeException("There is no next song in the playlist");
         }
 
+        currentIndex ++;
         return currentPlaylist.getSongs().get(currentIndex + 1);
     }
 
@@ -162,6 +163,7 @@ class SequentialPlayStrategy extends PlayStrategy{
             throw new RuntimeException("There is no previous song in the playlist");
         }
         
+        currentIndex --;
         return currentPlaylist.getSongs().get(currentIndex - 1);
     }
 }
