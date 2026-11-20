@@ -155,7 +155,7 @@ class SequentialPlayStrategy extends PlayStrategy{
         }
 
         currentIndex ++;
-        return currentPlaylist.getSongs().get(currentIndex + 1);
+        return currentPlaylist.getSongs().get(currentIndex);
     }
 
     public Song previous(){
@@ -164,7 +164,7 @@ class SequentialPlayStrategy extends PlayStrategy{
         }
         
         currentIndex --;
-        return currentPlaylist.getSongs().get(currentIndex - 1);
+        return currentPlaylist.getSongs().get(currentIndex);
     }
 }
 
