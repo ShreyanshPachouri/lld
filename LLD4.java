@@ -350,7 +350,7 @@ class DeviceManager{
 
 class StrategyManager{
     private static StrategyManager instance;
-    
+
     private StrategyManager(){};
 
     public static StrategyManager getInstance(){
@@ -375,5 +375,94 @@ class StrategyManager{
         }
 
         throw new RuntimeException("Invalid strategy type");
+    }
+}
+
+class AudioEngine{
+    Song currentSong;
+    boolean songIsPaused = false;
+
+    public String getCurrentSongTitle(){
+        if(currentSong == null){
+            throw new RuntimeException("No song is playing currently");
+        }
+
+        return this.currentSong.title;
+    }
+
+    public boolean isPaused(){
+        return this.songIsPaused;
+    }
+
+    public void play(IAudioOutputDevice device, Song song){
+        this.currentSong = song;
+        this.songIsPaused = false;
+        device.playAudio(song);
+    }
+
+    public void pause(){
+        if(isPaused()){
+            throw new RuntimeException("Cannot pause a song which is already paused");
+        }
+
+        this.songIsPaused = true;
+    }
+}
+
+class MusicPlayerFacade{
+    private static MusicPlayerFacade instance;
+    AudioEngine audioEngine = new AudioEngine();
+    Playlist loadedPlaylist;
+    PlayStrategy playStrategy;
+    
+    DeviceManager deviceManager = DeviceManager.getInstance();
+    StrategyManager strategyManager = StrategyManager.getInstance();
+
+    private MusicPlayerFacade(){}
+
+    public static synchronized MusicPlayerFacade getInstance(){
+        if(instance == null){
+            instance = new MusicPlayerFacade();
+        }
+
+        return instance;
+    }
+
+    public void connectDevice(DeviceType device){
+        deviceManager.connect(device);
+    }
+
+    public void setPlayStrategy(PlayStrategyType strategy){
+        playStrategy = strategyManager.getStrategy(strategy);
+    }
+
+    public void loadPlaylist(String name){
+        loadedPlaylist = new Playlist(name, new ArrayList<Song>());
+    }
+
+    public void playSong(Song song){
+        audioEngine.play(deviceManager.getOutputDevice(), song);
+    }
+
+    public void pauseSong(Song song){
+        audioEngine.pause();
+    }
+
+    public void playAllTracks(){
+        for(Song song: loadedPlaylist.songList){
+            playSong(song);
+        }
+    }
+
+    public void playNextTrack(){
+        playStrategy.next();
+    }
+
+    public void playPreviousTrack(){
+        playStrategy.previous();
+    }
+
+    public void enqueueNext(Song song){
+        playStrategy.addToNext(song);
     }
 }
