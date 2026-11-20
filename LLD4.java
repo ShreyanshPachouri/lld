@@ -439,6 +439,7 @@ class MusicPlayerFacade{
 
     public void loadPlaylist(String name){
         loadedPlaylist = playlistManager.getPlaylist(name);
+        playStrategy.setPlaylist(loadedPlaylist);
     }
 
     public void playSong(Song song){
@@ -451,7 +452,7 @@ class MusicPlayerFacade{
 
     public void playAllTracks(){
         for(Song song: loadedPlaylist.songList){
-            playSong(song);
+            playNextTrack();
         }
     }
 
