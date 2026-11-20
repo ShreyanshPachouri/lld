@@ -417,6 +417,7 @@ class MusicPlayerFacade{
     
     DeviceManager deviceManager = DeviceManager.getInstance();
     StrategyManager strategyManager = StrategyManager.getInstance();
+    PlaylistManager playlistManager = PlaylistManager.getInstance();
 
     private MusicPlayerFacade(){}
 
@@ -437,7 +438,7 @@ class MusicPlayerFacade{
     }
 
     public void loadPlaylist(String name){
-        loadedPlaylist = new Playlist(name, new ArrayList<Song>());
+        loadedPlaylist = playlistManager.getPlaylist(name);
     }
 
     public void playSong(Song song){
