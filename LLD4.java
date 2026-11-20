@@ -135,10 +135,11 @@ abstract class PlayStrategy{
 
 class SequentialPlayStrategy extends PlayStrategy{
     Playlist currentPlaylist;
-    int currentIndex;
+    int currentIndex = -1;
 
     public void setPlaylist(Playlist p){
         this.currentPlaylist = p;
+        this.currentIndex = -1;
     }
 
     public boolean hasNext(){
@@ -168,3 +169,152 @@ class SequentialPlayStrategy extends PlayStrategy{
     }
 }
 
+class RandomPlayStrategy extends PlayStrategy{
+    Playlist currentPlaylist;
+    ArrayList<Song> remainingSongs = new ArrayList<>();
+    Stack<Song> history = new Stack<>();
+    Random random = new Random();
+
+    public void setPlaylist(Playlist p){
+        this.currentPlaylist = p;
+        this.remainingSongs = new ArrayList<>(p.getSongs());
+        this.history = new Stack<>();
+    }
+
+    public boolean hasNext(){
+        return !remainingSongs.isEmpty();
+    }
+
+    public boolean hasPrevious(){
+        return history.size() > 1;
+    }
+
+    public Song next(){
+        if(!hasNext()){
+            throw new RuntimeException("There is no next song in the playlist");
+        }
+
+        int idx = random.nextInt(remainingSongs.size());
+        Song selected = remainingSongs.get(idx);
+
+        int last = remainingSongs.size() - 1;
+        remainingSongs.set(idx, remainingSongs.get(last));
+        remainingSongs.remove(last);
+
+        history.push(selected);
+        return selected;
+    }
+
+    public Song previous(){
+        if(!hasPrevious()){
+            throw new RuntimeException("There is no previous song in the playlist");
+        }
+
+        history.pop();
+        return history.peek();
+    }
+}
+
+class CustomQueueStrategy extends PlayStrategy{
+    Playlist currentPlaylist;
+    int currentIndex = -1;
+    Queue<Song> nextQueue = new LinkedList<>();
+    Stack<Song> prevStack = new Stack<>();
+
+    public void setPlaylist(Playlist p){
+        this.currentPlaylist = p;
+        this.currentIndex = -1;
+        this.nextQueue.clear();
+        this.prevStack.clear();
+    }
+
+    public boolean hasNext(){
+        return !nextQueue.isEmpty() || currentIndex < currentPlaylist.getSize() - 1;
+    }
+
+    public boolean hasPrevious(){
+        return !prevStack.isEmpty() || currentIndex > 0;
+    }
+
+    public Song next(){
+        if(!hasNext()){
+            throw new RuntimeException("There is no next song in the playlist");
+        }
+
+        if(!nextQueue.isEmpty()){
+            Song s = nextQueue.poll();
+            prevStack.push(s);
+            int pos = currentPlaylist.getSongs().indexOf(s);
+            if(pos != -1){
+                currentIndex = pos;
+            }
+            return s;
+        }
+
+        currentIndex ++;
+        return currentPlaylist.getSongs().get(currentIndex);
+    }
+
+    public Song previous(){
+        if(!hasPrevious()){
+            throw new RuntimeException("There is no previous song in the playlist");
+        }
+
+        if(!prevStack.isEmpty()){
+            Song s = prevStack.pop();
+            int pos = currentPlaylist.getSongs().indexOf(s);
+            if(pos != -1){
+                currentIndex = pos;
+            }
+            return s;
+        }
+
+        currentIndex --;
+        return currentPlaylist.getSongs().get(currentIndex);
+    }
+
+    public void addToNext(Song s){
+        nextQueue.add(s);
+    }
+}
+
+class PlaylistManager{
+    private static PlaylistManager instance;
+    private HashMap<String, Playlist> map;
+
+    private PlaylistManager(){
+        this.map = new HashMap<>();
+    }
+
+    public static synchronized PlaylistManager getInstance(){
+        if(instance == null){
+            instance = new PlaylistManager();
+        }
+
+        return instance;
+    }
+
+    public void createPlaylist(String name){
+        if(map.containsKey(name)){
+            throw new RuntimeException("Name is not unique");
+        }
+
+        map.put(name, new Playlist(name, new ArrayList<Song>()));
+    }
+
+    public void addSongToPlaylist(String playlistName, Song s){
+        if(!map.containsKey(playlistName)){
+            throw new RuntimeException("Playlist does not exist");
+        }
+
+        map.get(playlistName).addSongToPlaylist(s);
+    }
+
+    public Playlist getPlaylist(String name){
+        if(!map.containsKey(name)){
+            throw new RuntimeException("Playlist does not exist");
+        }
+
+        return map.get(name);
+    }
+}
