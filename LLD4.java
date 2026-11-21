@@ -457,11 +457,11 @@ class MusicPlayerFacade{
     }
 
     public void playNextTrack(){
-        playStrategy.next();
+        playSong(playStrategy.next());
     }
 
     public void playPreviousTrack(){
-        playStrategy.previous();
+        playSong(playStrategy.previous());
     }
 
     public void enqueueNext(Song song){
