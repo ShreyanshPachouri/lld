@@ -451,7 +451,7 @@ class MusicPlayerFacade{
     }
 
     public void playAllTracks(){
-        for(Song song: loadedPlaylist.songList){
+        while(playStrategy.hasNext()){
             playNextTrack();
         }
     }
@@ -468,3 +468,106 @@ class MusicPlayerFacade{
         playStrategy.addToNext(song);
     }
 }
+
+class MusicPlayerApplication{
+    private static MusicPlayerApplication instance;
+    private ArrayList<Song> songList;
+
+    PlaylistManager playlistManager = PlaylistManager.getInstance();
+    MusicPlayerFacade musicPlayerFacade = MusicPlayerFacade.getInstance();
+
+    private MusicPlayerApplication(){
+        songList = new ArrayList<>();
+    }
+
+    public static synchronized MusicPlayerApplication getInstance(){
+        if(instance == null){
+            instance = new MusicPlayerApplication();
+        }
+
+        return instance;
+    }
+
+    public void createSongInLibrary(String title, String artist, String path){
+        songList.add(new Song(title, artist, path));
+    }
+
+    public Song findSongByTitle(String title){
+        for(Song song: songList){
+            if(song.title.equals(title)){
+                return song;
+            }
+        }
+
+        throw new RuntimeException("Song not found");
+    }
+
+    public void createPlaylist(String name){
+        playlistManager.createPlaylist(name);
+    }
+
+    public void addSongToPlaylist(String playlistName, String title){
+        for(Song song: songList){
+            if(song.title.equals(title)){
+                playlistManager.addSongToPlaylist(playlistName, song);
+                return;
+            }
+        }
+
+        throw new RuntimeException("Song not found");
+    }
+
+    public void connectAudioDevice(DeviceType device){
+        musicPlayerFacade.connectDevice(device);
+    }
+
+    public void selectPlayStrategy(PlayStrategyType strategy){
+        musicPlayerFacade.setPlayStrategy(strategy);
+    }
+
+    public void loadPlaylist(String name){
+        musicPlayerFacade.loadPlaylist(name);
+    }
+
+    public void playSingleSong(String title){
+        for(Song song: songList){
+            if(song.title.equals(title)){
+                musicPlayerFacade.playSong(song);
+                break;
+            }
+        }
+        
+        throw new RuntimeException("Song not found");
+    }
+
+    public void pauseCurrentSong(String title){
+        for(Song song: songList){
+            if(song.title.equals(title)){
+                musicPlayerFacade.pauseSong(song);
+                break;
+            }
+        }
+        
+        throw new RuntimeException("Song not found");
+    }
+
+    public void playAllTracksInPlaylist(){
+        musicPlayerFacade.playAllTracks();
+    }
+
+    public void playPreviousTrackInPlaylist(){
+        musicPlayerFacade.playPreviousTrack();
+    }
+
+    public void queueSongNext(String title){
+         for(Song song: songList){
+            if(song.title.equals(title)){
+                musicPlayerFacade.enqueueNext(song);
+                break;
+            }
+        }
+        
+        throw new RuntimeException("Song not found");
+    }
+}
+
