@@ -533,7 +533,7 @@ class MusicPlayerApplication{
         for(Song song: songList){
             if(song.title.equals(title)){
                 musicPlayerFacade.playSong(song);
-                break;
+                return;
             }
         }
         
@@ -544,7 +544,7 @@ class MusicPlayerApplication{
         for(Song song: songList){
             if(song.title.equals(title)){
                 musicPlayerFacade.pauseSong(song);
-                break;
+                return;
             }
         }
         
@@ -563,7 +563,7 @@ class MusicPlayerApplication{
          for(Song song: songList){
             if(song.title.equals(title)){
                 musicPlayerFacade.enqueueNext(song);
-                break;
+                return;
             }
         }
         
@@ -571,3 +571,47 @@ class MusicPlayerApplication{
     }
 }
 
+
+public class LLD4{
+    public static void main(String[] args){
+        MusicPlayerApplication app = MusicPlayerApplication.getInstance();
+
+        app.createSongInLibrary("Kesariya", "Arijit Singh", "/music/kesariya.mp3");
+        app.createSongInLibrary("Tum Hi Ho", "Arijit Singh", "/music/tumhiho.mp3");
+        app.createSongInLibrary("Chaiyya Chaiyya", "Sukhwinder Singh", "/music/chaiyya.mp3");
+        app.createSongInLibrary("Jai Ho", "A. R. Rahman", "/music/jaiho.mp3");
+
+        app.createPlaylist("Bollywood Vibes");
+        app.addSongToPlaylist("Bollywood Vibes", "Kesariya");
+        app.addSongToPlaylist("Bollywood Vibes", "Tum Hi Ho");
+        app.addSongToPlaylist("Bollywood Vibes", "Chaiyya Chaiyya");
+        app.addSongToPlaylist("Bollywood Vibes", "Jai Ho");
+
+        System.out.println("---- Bluetooth, single song, pause and resume ----");
+        app.connectAudioDevice(DeviceType.BLUETOOTH);
+        app.playSingleSong("Tum Hi Ho");
+        app.pauseCurrentSong("Tum Hi Ho");
+        app.playSingleSong("Tum Hi Ho");
+
+        System.out.println("---- Sequential: play all, then previous ----");
+        app.selectPlayStrategy(PlayStrategyType.SEQUENTIAL);
+        app.loadPlaylist("Bollywood Vibes");
+        app.playAllTracksInPlaylist();
+        app.playPreviousTrackInPlaylist();
+
+        System.out.println("---- Custom queue: Tum Hi Ho and Chaiyya Chaiyya play first ----");
+        app.connectAudioDevice(DeviceType.WIRED);
+        app.selectPlayStrategy(PlayStrategyType.CUSTOM_QUEUE);
+        app.loadPlaylist("Bollywood Vibes");
+        app.queueSongNext("Tum Hi Ho");
+        app.queueSongNext("Chaiyya Chaiyya");
+        app.playAllTracksInPlaylist();
+
+        System.out.println("---- Random: every song once, then previous ----");
+        app.connectAudioDevice(DeviceType.HEADPHONES);
+        app.selectPlayStrategy(PlayStrategyType.RANDOM);
+        app.loadPlaylist("Bollywood Vibes");
+        app.playAllTracksInPlaylist();
+        app.playPreviousTrackInPlaylist();
+    }
+}
