@@ -41,13 +41,7 @@ abstract class IPaymentGateway{
     public abstract boolean confirmPayment(PaymentRequest paymentRequest);
 
     public boolean processPayment(PaymentRequest paymentRequest){
-        boolean result = validatePayment(paymentRequest) && initiatePayment(paymentRequest) && confirmPayment(paymentRequest);
-
-        if(!result){
-            throw new RuntimeException("Payment request failed");
-        }
-
-        return result;
+        return validatePayment(paymentRequest) && initiatePayment(paymentRequest) && confirmPayment(paymentRequest);
     }
 }
 
@@ -227,5 +221,25 @@ class PaymentController{
         paymentService.setGateway(paymentGateway);
 
         return paymentService.processPayment(paymentRequest);
+    }
+}
+
+public class LLD5 {
+    static void run(String label, GatewayType type, PaymentRequest request){
+        System.out.println("=== " + label + " ===");
+        try{
+            boolean result = PaymentController.getInstance().handlePayment(type, request);
+            System.out.println("Result: " + (result ? "SUCCESS" : "FAIL"));
+        }catch(RuntimeException e){
+            System.out.println("Result: FAIL (" + e.getMessage() + ")");
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args){
+        run("Paytm, valid", GatewayType.PAYTM, new PaymentRequest("Shreyansh", "Aditya", "INR", 1000.0));
+        run("Razorpay, valid", GatewayType.RAZORPAY, new PaymentRequest("Aditya", "Shreyansh", "INR", 500.0));
+        run("Paytm, wrong currency", GatewayType.PAYTM, new PaymentRequest("Shreyansh", "Aditya", "USD", 1000.0));
+        run("Razorpay, negative amount", GatewayType.RAZORPAY, new PaymentRequest("Aditya", "Shreyansh", "INR", -50.0));
     }
 }
