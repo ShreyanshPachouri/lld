@@ -13,9 +13,7 @@ enum DeviceType{
 }
 
 class Song{
-    String title;
-    String artist;
-    String filePath;
+    String title, artist, filePath;
 
     public Song(String title, String artist, String filePath){
         this.title = title;

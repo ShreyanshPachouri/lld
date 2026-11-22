@@ -1,8 +1,7 @@
 import java.util.*;
 
 class LLD2{
-    String code;
-    String name;
+    String code, name;
     int price;
 
     LLD2(String code, String name, int price){
@@ -14,8 +13,7 @@ class LLD2{
 
 class Restaurant{
     static int restaurantId;
-    String name;
-    String location;
+    String name, location;
     ArrayList<LLD2> menu;
 
     Restaurant(String name, String location, ArrayList<LLD2> menu){
@@ -88,8 +86,7 @@ class Cart{
 
 class User{
     int userId;
-    String name;
-    String address;
+    String name, address;
     Cart cart;
 
     User(int userId, String name, String adress, Cart cart){
