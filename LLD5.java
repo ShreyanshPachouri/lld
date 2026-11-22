@@ -25,13 +25,13 @@ abstract class BankingSystem{
 
 class PaytmBankingSystem extends BankingSystem{
     public boolean processPayment(double amount){
-        return (int)Math.random() * 100 > 80;
+        return Math.random() * 100 > 80;
     }
 }
 
 class RazorpayBankingSystem extends BankingSystem{
     public boolean processPayment(double amount){
-        return (int)Math.random() * 100 > 10;
+        return Math.random() * 100 > 10;
     }
 }
 
@@ -88,9 +88,11 @@ class PaytmGateway extends IPaymentGateway{
 
 class RazorpayGateway extends IPaymentGateway{
     BankingSystem bankingSystem = new RazorpayBankingSystem();
-    boolean result = true;
+    
 
     public boolean validatePayment(PaymentRequest paymentRequest){
+        boolean result = true;
+
         if(paymentRequest.amount < 0 || !paymentRequest.currency.equals("INR")){
             result = false;
         }
@@ -137,8 +139,9 @@ class PaymentGatewayProxy extends IPaymentGateway{
         boolean result = false;
 
         for(int attempt = 0; attempt < maxRetries; attempt ++){
-            if(paymentGateway.initiatePayment(paymentRequest)){
+            if(paymentGateway.processPayment(paymentRequest)){
                 result =  true;
+                break;
             }
         }
 
@@ -186,7 +189,7 @@ class PaymentService{
 
     private PaymentService(){};
 
-    public static PaymentService getInstance(){
+    public static synchronized PaymentService getInstance(){
         if(instance == null){
             instance = new PaymentService();
         }
@@ -204,7 +207,20 @@ class PaymentService{
 }
 
 class PaymentController{
-    PaymentService paymentService = PaymentService.getInstance();
+    PaymentService paymentService;
+    private static PaymentController instance;
+
+    private PaymentController(){
+        this.paymentService = PaymentService.getInstance();
+    }
+
+    public static synchronized PaymentController getInstance(){
+        if(instance == null){
+            instance = new PaymentController();
+        }
+
+        return instance;
+    }
 
     public boolean handlePayment(GatewayType gatewayType, PaymentRequest paymentRequest){
         PaymentGatewayProxy paymentGateway = GatewayFactory.getInstance().getGateway(gatewayType);
@@ -213,4 +229,3 @@ class PaymentController{
         return paymentService.processPayment(paymentRequest);
     }
 }
-
