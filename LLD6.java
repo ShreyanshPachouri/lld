@@ -49,7 +49,7 @@ class Cart{
 
     public double getInitialTotal(){
         for(CartItem cartItem: items){
-            initialTotal += (cartItem.product.price * cartItem.quantity);
+            initialTotal += cartItem.itemTotal();
         }
 
         System.out.println("The initial total is: " + initialTotal);
@@ -139,3 +139,22 @@ class DiscountStrategyManager{
     }
 }
 
+class Coupon{
+    Coupon nextCoupon;
+
+    public void setNext(Coupon nextCoupon){
+        this.nextCoupon = nextCoupon;
+    }
+
+    public int applyDiscount(Cart cart){
+        int discount = 0;
+
+        if(isApplicable(cart)){
+            discount += getDiscount(cart);
+        }
+
+        if(isCombinable()){
+            
+        }
+    }
+}
