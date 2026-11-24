@@ -22,7 +22,7 @@ abstract class InventoryStore{
     public abstract void addProduct(Product product, int quantity);
     public abstract void removeProduct(int sku, int quantity);
     public abstract int checkStock(int sku);
-    public abstract void listAllProducts();
+    public abstract ArrayList<Product> listAllProducts();
 }
 
 class DBInventoryStore extends InventoryStore{
@@ -66,10 +66,14 @@ class DBInventoryStore extends InventoryStore{
         return stockMap.get(sku);
     }
 
-    public void listAllProducts(){
+    public ArrayList<Product> listAllProducts(){
+        ArrayList<Product> productList = new ArrayList<>();
+
         for(int key: productsMap.keySet()){
-            System.out.println(productsMap.get(key).toString());
+            productList.add(productsMap.get(key));
         }
+
+        return productList;
     }
 }
 
@@ -94,7 +98,103 @@ class InventoryManager{
         return this.inventoryStore.checkStock(sku);
     }
 
-    public void getAvailableProducts(){
-        this.inventoryStore.listAllProducts();
+    public ArrayList<Product> getAvailableProducts(){
+        return this.inventoryStore.listAllProducts();
     }
 }
+
+abstract class ReplenishStrategy{
+    public abstract void replenish(InventoryManager inventoryManager, HashMap<Integer, Integer> stockMap);
+}
+
+class ThresholdReplenishStrategy extends ReplenishStrategy{
+    int threshold;
+
+    public ThresholdReplenishStrategy(int threshold){
+        this.threshold = threshold;
+    }
+
+    public void replenish(InventoryManager inventoryManager, HashMap<Integer, Integer> stockMap){
+        for(Integer sku: stockMap.keySet()){
+            if(stockMap.get(sku) < threshold){
+                inventoryManager.addStock(sku, threshold - stockMap.get(sku));
+            }
+        }
+    }
+}
+
+class WeeklyReplenishStrategy extends ReplenishStrategy{
+    int quantity;
+
+    public WeeklyReplenishStrategy(int quantity){
+        this.quantity = quantity;
+    }
+
+    public void replenish(InventoryManager inventoryManager, HashMap<Integer, Integer> stockMap){
+        for(Integer sku: stockMap.keySet()){
+            inventoryManager.addStock(sku, this.quantity);
+        }
+    }
+}
+
+class DarkStore{
+    String name;
+    Double x;
+    Double y;
+    InventoryManager inventoryManager;
+    ReplenishStrategy replenishStrategy;
+    
+    public DarkStore(String name, Double x, Double y, InventoryManager inventoryManager, ReplenishStrategy replenishStrategy){
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.inventoryManager = inventoryManager;
+        this.replenishStrategy = replenishStrategy;
+    }
+
+    public ArrayList<Product> getAllProducts(){
+        return this.inventoryManager.getAvailableProducts();
+    }
+
+    public double distanceTo(Double ux, Double uy){
+        return Math.sqrt(Math.pow((ux - x), 2) + Math.pow((uy - y), 2));
+    }
+
+    public void runReplenish(HashMap<Integer, Integer> stockMap){
+        replenishStrategy.replenish(inventoryManager, stockMap);
+    }
+}
+
+class DarkStoreManager{
+    private static DarkStoreManager instance;
+    ArrayList<DarkStore> darkStores;
+
+    private DarkStoreManager(){
+        this.darkStores = new ArrayList<>();
+    }
+
+    public static synchronized DarkStoreManager getInstance(){
+        if(instance == null){
+            instance = new DarkStoreManager();
+        }
+
+        return instance;
+    }
+
+    public void addStore(DarkStore darkStore){
+        darkStores.add(darkStore);
+    }
+
+    public ArrayList<DarkStore> getNearbyStores(Double ux, Double uy, Double maxDistance){
+        ArrayList<DarkStore> nearStores = new ArrayList<>();
+
+        for(DarkStore darkStore: darkStores){
+            if(darkStore.distanceTo(ux, uy) <= maxDistance){
+                nearStores.add(darkStore);
+            }
+        }
+
+        return nearStores;
+    }
+}
+
