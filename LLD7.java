@@ -44,13 +44,22 @@ class DBInventoryStore extends InventoryStore{
 
     public void removeProduct(int sku, int quantity){
         if(!productsMap.containsKey(sku) || stockMap.get(sku) < quantity || quantity <= 0){
-            throw new RuntimeException("Product does not exist OR quantity is greater than existing stock or quantity is less than 1");
+           return;
+        }
+
+        if(quantity == stockMap.get(sku)){
+            stockMap.remove(sku);
+            productsMap.remove(sku);
+        }
+
+        else{
+            stockMap.put(sku, stockMap.get(sku) - quantity);
         }
     }
 
     public int checkStock(int sku){
         if(!stockMap.containsKey(sku)){
-            throw new RuntimeException("Invalid product");
+            return -1;
         }
 
         return stockMap.get(sku);
@@ -88,4 +97,3 @@ class InventoryManager{
         this.inventoryStore.listAllProducts();
     }
 }
-
