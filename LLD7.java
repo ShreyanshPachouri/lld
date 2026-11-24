@@ -44,6 +44,7 @@ class DBInventoryStore extends InventoryStore{
 
     public void removeProduct(int sku, int quantity){
         if(!productsMap.containsKey(sku) || stockMap.get(sku) < quantity || quantity <= 0){
+            System.out.println("Invalid remove request");
            return;
         }
 
@@ -59,7 +60,7 @@ class DBInventoryStore extends InventoryStore{
 
     public int checkStock(int sku){
         if(!stockMap.containsKey(sku)){
-            return -1;
+            return 0;
         }
 
         return stockMap.get(sku);
@@ -67,7 +68,7 @@ class DBInventoryStore extends InventoryStore{
 
     public void listAllProducts(){
         for(int key: productsMap.keySet()){
-            System.out.println(productsMap.get(key));
+            System.out.println(productsMap.get(key).toString());
         }
     }
 }
@@ -76,8 +77,8 @@ class InventoryManager{
     InventoryStore inventoryStore;
     ProductFactory productFactory;
 
-    public InventoryManager(){
-        this.inventoryStore = new DBInventoryStore();
+    public InventoryManager(InventoryStore inventoryStore){
+        this.inventoryStore = inventoryStore;
         this.productFactory = new ProductFactory();
     }
 
