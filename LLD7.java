@@ -44,8 +44,7 @@ class DBInventoryStore extends InventoryStore{
 
     public void removeProduct(int sku, int quantity){
         if(!productsMap.containsKey(sku) || stockMap.get(sku) < quantity || quantity <= 0){
-            System.out.println("Invalid remove request");
-           return;
+            throw new RuntimeException("Invalid remove request");
         }
 
         if(quantity == stockMap.get(sku)){
@@ -116,7 +115,7 @@ class ThresholdReplenishStrategy extends ReplenishStrategy{
 
     public void replenish(InventoryManager inventoryManager, HashMap<Integer, Integer> stockMap){
         for(Integer sku: stockMap.keySet()){
-            if(stockMap.get(sku) < threshold){
+            if(inventoryManager.checkStock(sku) < threshold){
                 inventoryManager.addStock(sku, threshold - stockMap.get(sku));
             }
         }
@@ -198,3 +197,80 @@ class DarkStoreManager{
     }
 }
 
+class Pair<K,V> {
+    private K key; 
+    private V value;
+    
+    public Pair(K k, V v){ 
+        key = k; 
+        value = v; 
+    }
+    
+    public K getKey(){ 
+        return key; 
+    }
+    
+    public V getValue(){ 
+        return value; 
+    }
+}
+
+class Cart{
+    ArrayList<Pair<Product, Integer>> items;
+    ProductFactory productFactory;
+
+    public Cart(){
+        this.items = new ArrayList<>();
+    }
+
+    public void addItems(int sku, int quantity){
+        this.items.add(new Pair<productFactory.createProduct(sku), quantity>);
+    }
+
+    public Double getTotal(){
+        Double total = 0;
+
+        for(Pair<Product, Integer> pair: items){
+            total += pair.getKey().price * pair.getValue();
+        }
+
+        return total;
+    }
+}
+
+class User{
+    String name;
+    Double x;
+    Double y;
+    Cart cart;
+
+    public User(String name, Double x, Double y, Cart cart){
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.cart = cart;
+    }
+}
+
+class DeliveryPartner{
+    String name;
+
+    public DeliveryPartner(String name){
+        this.name = name;
+    }
+}
+
+class Order {
+    private static int nextId = 1;
+    public int orderId;
+    public User user;
+    public List<Pair<Product,Integer>> items = new ArrayList<>();
+    public List<DeliveryPartner> partners = new ArrayList<>();
+    public double totalAmount;
+
+    public Order(User u) {
+        orderId = nextId++;
+        user = u;
+        totalAmount = 0.0;
+    }
+}
