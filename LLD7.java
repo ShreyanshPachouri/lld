@@ -301,7 +301,6 @@ class OrderManager{
     public void placeOrder(User user, Cart cart){
         ArrayList<Pair<Product, Integer>> requestedItems = cart.getItems();
         ArrayList<Pair<Product, Integer>> fulfilledItems = new ArrayList<>();
-        ArrayList<Order> orders = new ArrayList<>();
         
         Double maxDistance = 5.0;
         ArrayList<DarkStore> nearestStores = darkStoreManager.getNearbyStores(user.x, user.y, maxDistance);
@@ -311,6 +310,7 @@ class OrderManager{
         }
 
         DarkStore firstStore = nearestStores.get(0);
+        Order order = new Order(user);
         
         for(Pair<Product, Integer> item: requestedItems){
             if(firstStore.inventoryManager.checkStock(item.getKey().sku) < item.getValue()){
@@ -318,10 +318,9 @@ class OrderManager{
             }
 
             firstStore.inventoryManager.removeStock(item.getKey().sku, item.getValue());
+            order.items.add(item);
             fulfilledItems.add(item);
         }
-
-        Order order = new Order(user);
 
         if(fulfilledItems.size() == requestedItems.size()){
             System.out.println("Only 1 agent required");
@@ -335,15 +334,25 @@ class OrderManager{
         int partnerNumber = 1;
 
         for(int i = 0; i < nearestStores.size(); i ++){
+            boolean contributed = false;
+
             for(Pair<Product, Integer> item: requestedItems){
+                if(fulfilledItems.contains(item)){
+                    continue;
+                }
+
                 if(nearestStores.get(i).inventoryManager.checkStock(item.getKey().sku) >= item.getValue()){
                     nearestStores.get(i).inventoryManager.removeStock(item.getKey().sku, item.getValue());
                     fulfilledItems.add(item);
+                    order.items.add(item);
+                    contributed = true;
                 }
             }
 
-            order.partners.add(new DeliveryPartner("Partner " + partnerNumber ++));
-            System.out.println("Agent " + partnerNumber + " added");
+            if(contributed){
+                order.partners.add(new DeliveryPartner("Partner " + partnerNumber ++));
+                System.out.println("Agent " + partnerNumber + " added");
+            }
 
             if(fulfilledItems.size() == requestedItems.size()){
                 break;
