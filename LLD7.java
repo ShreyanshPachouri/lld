@@ -224,17 +224,21 @@ class Cart{
     }
 
     public void addItems(int sku, int quantity){
-        this.items.add(new Pair<productFactory.createProduct(sku), quantity>);
+        this.items.add(new Pair<>(productFactory.createProduct(sku), quantity));
     }
 
     public Double getTotal(){
-        Double total = 0;
+        Double total = 0.0;
 
         for(Pair<Product, Integer> pair: items){
             total += pair.getKey().price * pair.getValue();
         }
 
         return total;
+    }
+
+    public ArrayList<Pair<Product, Integer>> getItems(){
+        return this.items;
     }
 }
 
@@ -294,12 +298,12 @@ class OrderManager{
     }
 
     public void placeOrder(User user, Cart cart){
-        ArrayList<Pair<Product, Integer>> requestedItems = cart.items;
+        ArrayList<Pair<Product, Integer>> requestedItems = cart.getItems();
         ArrayList<Pair<Product, Integer>> fulfilledItems = new ArrayList<>();
         ArrayList<Order> orders = new ArrayList<>();
-        ArrayList<DarkStore> nearestStores = darkStoreManager.getNearbyStores(user.x, user.y, maxDistance);
         
         Double maxDistance = 5.0;
+        ArrayList<DarkStore> nearestStores = darkStoreManager.getNearbyStores(user.x, user.y, maxDistance);
        
         if(nearestStores.size() == 0){
             throw new RuntimeException("No nearby stores found");
@@ -337,8 +341,8 @@ class OrderManager{
             ArrayList<Pair<Product, Integer>> fulfilledItemsPerStore = new ArrayList<>();
 
             for(Pair<Product, Integer> item: requestedItems){
-                if(nearestStores.get(i).inventoryManager.checkStock(item.getKey().sku) >= item.value){
-                    nearestStores.get(i).inventoryManager.removeStock(item.getKey().sku, item.value);
+                if(nearestStores.get(i).inventoryManager.checkStock(item.getKey().sku) >= item.getValue()){
+                    nearestStores.get(i).inventoryManager.removeStock(item.getKey().sku, item.getValue());
                     fulfilledItemsPerStore.add(item);
                 }
             }
@@ -361,6 +365,6 @@ class OrderManager{
         }
 
         order.totalAmount = cart.getTotal();
-        order.add(order);
+        orders.add(order);
     }
 }
