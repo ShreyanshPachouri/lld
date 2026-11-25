@@ -264,13 +264,103 @@ class Order {
     private static int nextId = 1;
     public int orderId;
     public User user;
-    public List<Pair<Product,Integer>> items = new ArrayList<>();
+    public List<Pair<Product, Integer>> items = new ArrayList<>();
     public List<DeliveryPartner> partners = new ArrayList<>();
     public double totalAmount;
 
     public Order(User u) {
-        orderId = nextId++;
+        orderId = nextId ++;
         user = u;
         totalAmount = 0.0;
+    }
+}
+
+class OrderManager{
+    private static OrderManager instance;
+    DarkStoreManager darkStoreManager;
+    ArrayList<Order> orders;
+
+    private OrderManager(){
+        this.orders = new ArrayList<>();
+        this.darkStoreManager = DarkStoreManager.getInstance();
+    }
+    
+    public static synchronized OrderManager getInstance(){
+        if(instance == null){
+            instance = new OrderManager();
+        }
+
+        return instance;
+    }
+
+    public void placeOrder(User user, Cart cart){
+        ArrayList<Pair<Product, Integer>> requestedItems = cart.items;
+        ArrayList<Pair<Product, Integer>> fulfilledItems = new ArrayList<>();
+        ArrayList<Order> orders = new ArrayList<>();
+        ArrayList<DarkStore> nearestStores = darkStoreManager.getNearbyStores(user.x, user.y, maxDistance);
+        
+        Double maxDistance = 5.0;
+       
+        if(nearestStores.size() == 0){
+            throw new RuntimeException("No nearby stores found");
+        }
+
+        DarkStore firstStore = nearestStores.get(0);
+        
+        for(Pair<Product, Integer> item: requestedItems){
+            if(firstStore.inventoryManager.checkStock(item.getKey().sku) < item.getValue()){
+                break;
+            }
+
+            firstStore.inventoryManager.removeStock(item.getKey().sku, item.getValue());
+            fulfilledItems.add(item);
+        }
+
+        Order order = new Order(user);
+
+        if(fulfilledItems.size() == requestedItems.size()){
+            System.out.println("Only 1 agent required");
+            order.totalAmount = cart.getTotal();
+            order.partners.add(new DeliveryPartner("Partner 1"));
+            orders.add(order);
+            return;
+        }
+
+        System.out.println("Multiple agents are required");
+        int partnerNumber = 1;
+
+        for(Pair<Product, Integer> item: fulfilledItems){
+            requestedItems.remove(item);
+        }
+
+        for(int i = 0; i < nearestStores.size(); i ++){
+            ArrayList<Pair<Product, Integer>> fulfilledItemsPerStore = new ArrayList<>();
+
+            for(Pair<Product, Integer> item: requestedItems){
+                if(nearestStores.get(i).inventoryManager.checkStock(item.getKey().sku) >= item.value){
+                    nearestStores.get(i).inventoryManager.removeStock(item.getKey().sku, item.value);
+                    fulfilledItemsPerStore.add(item);
+                }
+            }
+
+            for(Pair<Product, Integer> item: fulfilledItemsPerStore){
+                requestedItems.remove(item);
+            }
+
+            order.partners.add(new DeliveryPartner("Partner " + partnerNumber ++));
+            System.out.println("Agent " + partnerNumber + " added");
+
+            if(requestedItems.size() == 0){
+                break;
+            }
+        }
+
+        if(requestedItems.size() > 0){
+            System.out.println("Order could not be fulfilled");
+            return;
+        }
+
+        order.totalAmount = cart.getTotal();
+        order.add(order);
     }
 }
