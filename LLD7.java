@@ -221,6 +221,7 @@ class Cart{
 
     public Cart(){
         this.items = new ArrayList<>();
+        this.productFactory = new ProductFactory();
     }
 
     public void addItems(int sku, int quantity){
@@ -333,33 +334,23 @@ class OrderManager{
         System.out.println("Multiple agents are required");
         int partnerNumber = 1;
 
-        for(Pair<Product, Integer> item: fulfilledItems){
-            requestedItems.remove(item);
-        }
-
         for(int i = 0; i < nearestStores.size(); i ++){
-            ArrayList<Pair<Product, Integer>> fulfilledItemsPerStore = new ArrayList<>();
-
             for(Pair<Product, Integer> item: requestedItems){
                 if(nearestStores.get(i).inventoryManager.checkStock(item.getKey().sku) >= item.getValue()){
                     nearestStores.get(i).inventoryManager.removeStock(item.getKey().sku, item.getValue());
-                    fulfilledItemsPerStore.add(item);
+                    fulfilledItems.add(item);
                 }
-            }
-
-            for(Pair<Product, Integer> item: fulfilledItemsPerStore){
-                requestedItems.remove(item);
             }
 
             order.partners.add(new DeliveryPartner("Partner " + partnerNumber ++));
             System.out.println("Agent " + partnerNumber + " added");
 
-            if(requestedItems.size() == 0){
+            if(fulfilledItems.size() == requestedItems.size()){
                 break;
             }
         }
 
-        if(requestedItems.size() > 0){
+        if(fulfilledItems.size() != requestedItems.size()){
             System.out.println("Order could not be fulfilled");
             return;
         }
