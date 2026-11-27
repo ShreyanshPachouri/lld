@@ -32,13 +32,13 @@ class NotificationService{
         return instance;
     }
 
-    public void add(String userID){
+    public void add(String userID, NotificationObserver notificationObserver){
         if(observers.containsKey(userID)){
             System.out.println("User already exists");
             return;
         }
 
-        observers.put(userID, new UserNotificationObserver(userID));
+        observers.put(userID, notificationObserver);
         System.out.println("User added");
     }
 
