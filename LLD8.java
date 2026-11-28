@@ -1,6 +1,46 @@
 import java.time.LocalTime;
 import java.util.*;
 
+class User{
+    String userID;
+    UserProfile userProfile;
+    Preference preference;
+    HashMap<String, SwipeAction> swipeHistory;
+    NotificationObserver notificationObserver;
+
+    public User(String userID, UserProfile userProfile, Preference preference){
+        this.userID = userID;
+        this.userProfile = userProfile;
+        this.preference = preference;
+        this.swipeHistory = new HashMap<>();
+        this.notificationObserver = new UserNotificationObserver(this.userID);
+    }
+
+    public void swipe(String userID, SwipeAction swipeAction){
+        this.swipeHistory.put(userID, swipeAction);
+    }
+
+    public boolean hasLiked(String userID){
+        if(!swipeHistory.containsKey(userID) || swipeHistory.get(userID) == SwipeAction.LEFT){
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean hasDisliked(String userID){
+        if(!swipeHistory.containsKey(userID) || swipeHistory.get(userID) == SwipeAction.RIGHT){
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean hasInteractedWith(String userID){
+        return swipeHistory.containsKey(userID);
+    }
+}
+
 abstract class NotificationObserver{
     public abstract void update(String message);
 }
@@ -235,3 +275,105 @@ enum SwipeAction{
     RIGHT
 }
 
+abstract class Matcher{
+    public abstract double calculateMatchScore(User user1, User user2);
+}
+
+class BasicMatcher extends Matcher{
+    public double calculateMatchScore(User user1, User user2){
+        if(!user1.preference.interestedIn.contains(user2.userProfile.gender) || !user2.preference.interestedIn.contains(user1.userProfile.gender)){
+            return 0.0;
+        }
+
+        if((user2.userProfile.age > user1.preference.maxAge) || (user2.userProfile.age < user1.preference.minAge) || (user1.userProfile.age > user2.preference.maxAge) || (user1.userProfile.age < user2.preference.minAge)){
+            return 0.0;
+        }
+
+        if(user1.userProfile.location.distanceInKM(user2.userProfile.location) > user1.preference.maxDistance || user2.userProfile.location.distanceInKM(user1.userProfile.location) > user2.preference.maxDistance){
+            return 0.0;
+        }
+
+        return 0.5;
+    }
+}
+
+class InterestBasedMatcher extends Matcher{
+    public double calculateMatchScore(User user1, User user2){
+        double score = new BasicMatcher().calculateMatchScore(user1, user2);
+
+        if(score == 0.0){
+            return 0.0;
+        }
+
+        ArrayList<String> interests1 = user1.preference.interests;
+        ArrayList<String> interests2 = user2.preference.interests;
+
+        int sharedCount = 0;
+
+        for(String interest: interests1){
+            if(interests2.contains(interest)){
+                sharedCount ++;
+            }
+        }
+
+        score += 0.5 * (sharedCount / Math.max(interests1.size(), interests2.size()));
+        return score;
+    }
+}
+
+class LocationBasedMatcher extends Matcher{
+    public double calculateMatchScore(User user1, User user2){
+        double score = new InterestBasedMatcher().calculateMatchScore(user1, user2);
+
+        if(score == 0.0){
+            return 0.0;
+        }
+
+        double maxDistance = Math.max(user1.preference.maxDistance, user2.preference.maxDistance);
+        double distance = user1.userProfile.location.distanceInKM(user2.userProfile.location);
+
+        score += 0.2 * (1 - (distance / maxDistance));
+        return score;
+    }
+}
+
+class MatcherFactory{
+    public Matcher createMatcher(MatcherType matcherType){
+        if(matcherType == MatcherType.BASIC){
+            return new BasicMatcher();
+        }
+
+        if(matcherType == MatcherType.INTEREST){
+            return new InterestBasedMatcher();
+        }
+
+        if(matcherType == MatcherType.LOCATION){
+            return new LocationBasedMatcher();
+        }
+
+        throw new RuntimeException("Invalid matcher type");
+    }
+}
+
+class DatingApp{
+    ArrayList<User> users = new ArrayList<>();
+    ArrayList<ChatRoom> chatRooms = new ArrayList<>();
+    Matcher matcher;
+
+    public void setMatcher(Matcher matcher){
+        this.matcher = matcher;
+    }
+
+    public void createUser(String userID, UserProfile userProfile, Preference preference){
+        users.add(new User(userID, userProfile, preference));
+    }
+
+    public void swipe(String userID, String targetID, SwipeAction swipeAction){
+        for(User user: users){
+            if(user.userID.equals(userID)){
+                user.swipe(targetID, swipeAction);
+                return;
+            }
+        }
+    }
+}
