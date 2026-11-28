@@ -67,23 +67,17 @@ class Cart{
     }
 }
 
-interface DiscountStrategy{
-    public double calculate(double amount);
+abstract class DiscountStrategy{
+    public abstract double calculate(double amount);
 }
 
-class FlatDiscountStrategy implements DiscountStrategy{
-    double amount;
-
-    public FlatDiscountStrategy(double amount){
-        this.amount = amount;
-    }
-
+class FlatDiscountStrategy extends DiscountStrategy{
     public double calculate(double amount){
-        return this.amount;
+        return amount;
     }
 }
 
-class PercentDiscountStrategy implements DiscountStrategy{
+class PercentDiscountStrategy extends DiscountStrategy{
     double percentage;
 
     public PercentDiscountStrategy(double percentage){
@@ -95,7 +89,7 @@ class PercentDiscountStrategy implements DiscountStrategy{
     }
 }
 
-class PercentWithCapStrategy implements DiscountStrategy{
+class PercentWithCapStrategy extends DiscountStrategy{
     double percent;
     double cap;
 
@@ -109,7 +103,7 @@ class PercentWithCapStrategy implements DiscountStrategy{
     }
 }
 
-class DiscountStrategyManager{
+
     private static DiscountStrategyManager instance;
 
     private DiscountStrategyManager(){};
@@ -139,22 +133,94 @@ class DiscountStrategyManager{
     }
 }
 
-class Coupon{
+class DiscountStrategyManager{
+    private static DiscountStrategyManager instance;
+
+    private DiscountStrategyManager(){};
+
+    public static synchronized DiscountStrategyManager getInstance(){
+        if(instance == null){
+            instance = new DiscountStrategyManager();
+        }
+
+        return instance;
+    }
+
+    public DiscountStrategy getStrategy(StrategyType strategyType, double percentage, double cap){
+        if(strategyType == StrategyType.FLAT){
+            return new FlatDiscountStrategy();
+        }
+
+        else if(strategyType == StrategyType.PERCENT){
+            return new PercentDiscountStrategy(percentage);
+        }
+
+        else if(strategyType == StrategyType.PERCENT_WITH_CAP){
+            return new PercentWithCapStrategy(percentage, cap);
+        }
+
+        throw new RuntimeException("Invalid strategy type");
+    }
+}
+
+abstract class Coupon{
     Coupon nextCoupon;
 
     public void setNext(Coupon nextCoupon){
         this.nextCoupon = nextCoupon;
     }
 
-    public int applyDiscount(Cart cart){
-        int discount = 0;
+    public abstract boolean isApplicable(Cart cart);
+    public abstract double getDiscount(Cart cart);
+    public abstract boolean isCombinable();
 
+    public void applyDiscount(Cart cart){
         if(isApplicable(cart)){
-            discount += getDiscount(cart);
+            double discount = getDiscount(cart);
+            cart.applyDiscount(discount);
+
+            if(!isCombinable()){
+                return;
+            }
         }
 
-        if(isCombinable()){
-            
+        if(nextCoupon != null){
+            nextCoupon.applyDiscount(cart);
         }
     }
+}
+
+class SeasonalOffer extends Coupon{
+    double percent;
+    String category;
+    DiscountStrategyManager discountStrategyManager = DiscountStrategyManager.getInstance();
+    
+    public SeasonalOffer(double percent, String category){
+        this.percent = percent;
+        this.category = category;
+    }
+
+    public boolean isApplicable(Cart cart){
+        for(CartItem item: cart.items){
+            if(item.product.category.equals(this.category)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public double getDiscount(Cart cart){
+        discountStrategyManager.getStrategy(StrategyType.PERCENT, percent, 0.0);
+    }
+
+    public boolean isCombinable(){
+        return true;
+    }
+
+    void setNext(LoyaltyDiscount);
+}
+
+class LoyaltyDiscount extends Coupon{
+    
 }
