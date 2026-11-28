@@ -15,7 +15,7 @@ class User{
         this.preference = preference;
         this.swipeHistory = new HashMap<>();
         this.notificationObserver = new UserNotificationObserver(this.userID);
-        notificationService.observers.put(userID, this.notificationObserver);
+        notificationService.add(userID, this.notificationObserver);
     }
 
     public void swipe(String userID, SwipeAction swipeAction){
@@ -389,7 +389,7 @@ class DatingApp{
         }
 
         for(User user: users){
-            if(user.userID.equals(targetID) && user.hasLiked(userID)){
+            if(user.userID.equals(targetID) && user.hasLiked(userID) && swipeAction == SwipeAction.RIGHT){
                 ChatRoom chatRoom = new ChatRoom();
                 chatRoom.addPerson(userID);
                 chatRoom.addPerson(targetID);
@@ -398,13 +398,15 @@ class DatingApp{
         }
     }
 
-    public void findNearbyUsers(String userID){
+    public ArrayList<User> findNearbyUsers(String userID){
         for(User user: users){
             if(user.userID.equals(userID)){
                 LocationStrategy locationStrategy = new BasicLocationStrategy();
                 locationService.setStrategy(locationStrategy);
-                locationService.findNearbyUser(user.userProfile.location, user.preference.maxDistance, users);
+                return locationService.findNearbyUser(user.userProfile.location, user.preference.maxDistance, users);
             }
         }
+
+        return null;
     }
 }
