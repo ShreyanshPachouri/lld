@@ -251,11 +251,13 @@ class Message{
 }
 
 class ChatRoom{
+    static int lastID = 1;
     String ID;
     ArrayList<String> personIDs;
     ArrayList<Message> messages;
 
     public ChatRoom(){
+        ID = Integer.toString(lastID ++);
         personIDs = new ArrayList<>();
         messages = new ArrayList<>();
     }
