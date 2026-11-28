@@ -7,6 +7,7 @@ class User{
     Preference preference;
     HashMap<String, SwipeAction> swipeHistory;
     NotificationObserver notificationObserver;
+    NotificationService notificationService = NotificationService.getInstance();
 
     public User(String userID, UserProfile userProfile, Preference preference){
         this.userID = userID;
@@ -14,6 +15,7 @@ class User{
         this.preference = preference;
         this.swipeHistory = new HashMap<>();
         this.notificationObserver = new UserNotificationObserver(this.userID);
+        notificationService.observers.put(userID, this.notificationObserver);
     }
 
     public void swipe(String userID, SwipeAction swipeAction){
@@ -155,7 +157,7 @@ class LocationService{
         return instance;
     }
 
-    private void setStrategy(LocationStrategy locationStrategy){
+    public void setStrategy(LocationStrategy locationStrategy){
         this.locationStrategy = locationStrategy;
     }
 
@@ -193,12 +195,12 @@ class Preference{
         this.maxDistance = maxDistance;
     }
 
-    private void addInterest(String interest){
+    public void addInterest(String interest){
         interests.add(interest);
         System.out.println("Interest " + interest + " added");
     }
 
-    private void addGender(Gender gender){
+    public void addGender(Gender gender){
         interestedIn.add(gender);
         System.out.println("Gender " + gender + " added");
     }
@@ -220,7 +222,7 @@ class UserProfile{
         this.location = location;
     }
 
-    private void display(){
+    public void display(){
         System.out.println("Name: " + name);
         System.out.println("Age: " + age);
         System.out.println("Gender: " + gender);
@@ -253,8 +255,17 @@ class ChatRoom{
     ArrayList<String> personIDs;
     ArrayList<Message> messages;
 
+    public ChatRoom(){
+        personIDs = new ArrayList<>();
+        messages = new ArrayList<>();
+    }
+
     public void addMessage(String senderID, String content){
         messages.add(new Message(senderID, content, LocalTime.now().toString()));
+    }
+
+    public void addPerson(String userID){
+        personIDs.add(userID);
     }
 
     public void displayChat(){
@@ -316,7 +327,7 @@ class InterestBasedMatcher extends Matcher{
             }
         }
 
-        score += 0.5 * (sharedCount / Math.max(interests1.size(), interests2.size()));
+        score += 0.5 * (sharedCount / Math.max((double)interests1.size(), (double)interests2.size()));
         return score;
     }
 }
@@ -358,6 +369,7 @@ class MatcherFactory{
 class DatingApp{
     ArrayList<User> users = new ArrayList<>();
     ArrayList<ChatRoom> chatRooms = new ArrayList<>();
+    LocationService locationService = LocationService.getInstance();
     Matcher matcher;
 
     public void setMatcher(Matcher matcher){
@@ -372,7 +384,26 @@ class DatingApp{
         for(User user: users){
             if(user.userID.equals(userID)){
                 user.swipe(targetID, swipeAction);
-                return;
+                break;
+            }
+        }
+
+        for(User user: users){
+            if(user.userID.equals(targetID) && user.hasLiked(userID)){
+                ChatRoom chatRoom = new ChatRoom();
+                chatRoom.addPerson(userID);
+                chatRoom.addPerson(targetID);
+                chatRooms.add(chatRoom);
+            }
+        }
+    }
+
+    public void findNearbyUsers(String userID){
+        for(User user: users){
+            if(user.userID.equals(userID)){
+                LocationStrategy locationStrategy = new BasicLocationStrategy();
+                locationService.setStrategy(locationStrategy);
+                locationService.findNearbyUser(user.userProfile.location, user.preference.maxDistance, users);
             }
         }
     }
